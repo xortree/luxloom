@@ -1,0 +1,173 @@
+<html>
+<head>
+<script>
+     
+var LUXLOOM = {
+ROOT:{}, /* Holds ref to the luxloom obj */
+HEAP:{},
+COLL:
+	{
+			HASHARR:function(){
+				return {
+					NAM:[],
+					DAT:[],
+					ADD:function(ADD_NAM, ADD_DAT){
+						if(this.NAM.indexOf(ADD_NAM) == -1 && (typeof ADD_NAM) === "string") //the danger of struct corruption comes in the insert operations
+						{
+							this.NAM.push(ADD_NAM);		
+							this.DAT.push(ADD_DAT);
+							return {TRUTH:true};
+						}
+						else
+						{
+							return {TRUTH:false};
+						}					
+					},
+					SUB:function( SUB_NAM ){
+						var SUB_TEMP = this.NAM.indexOf(SUB_NAM);
+						if (SUB_TEMP == -1)
+						{
+							return {TRUTH:false};			
+						}
+						else
+						{
+							this.NAM.splice(SUB_TEMP, 1);
+							this.DAT.splice(SUB_TEMP, 1);
+							return {TRUTH:true};
+						}				
+					},
+					GET:function( GET_NAM ){
+						var GET_TEMP = this.NAM.indexOf(GET_NAM);
+						if (GET_TEMP == -1)
+						{
+							return {TRUTH:false,FORM:null};			
+						}
+						else
+						{
+							return {TRUTH:true,FORM:this.DAT[GET_TEMP]};
+						}
+					},
+					FORALL:function( FORALL_ACT ){
+						var FORALL_TEMP = this.DAT.length;
+						for (var FORALL_TEMP_i = 0;FORALL_TEMP_i < FORALL_TEMP;FORALL_TEMP_i++)
+						{
+							FORALL_ACT(this.DAT[FORALL_TEMP_i]);
+						}											
+					},
+					FOREACH:function( FOREACH_ACT, FOREACH_PROP ){
+						var FOREACH_TEMP = this.DAT.length;
+						for (var FOREACH_TEMP_i = 0;FOREACH_TEMP_i < FOREACH_TEMP;FOREACH_TEMP_i++)
+						{
+							if(this.DAT[FOREACH_TEMP_i].hasOwnProperty(FOREACH_PROP))
+							{
+								FOREACH_ACT(this.DAT[FOREACH_TEMP_i]);								
+							}																													
+						}											
+					},				
+					NAMEOFALL:function(){
+						var NAMEOFALL_RETURNER = [];
+						var NAMEOFALL_TEMP = this.NAM.length;
+						for (var NAMEOFALL_TEMP_i = 0;NAMEOFALL_TEMP_i < NAMEOFALL_TEMP;NAMEOFALL_TEMP_i++)
+						{
+							NAMEOFALL_RETURNER.push(this.NAM[NAMEOFALL_TEMP_i]);
+						}
+						return NAMEOFALL_RETURNER;
+					},					
+					NAMEOFEACH:function( NAMEOFEACH_TYPE ){					
+						var NAMEOFEACH_RETURNER = [];
+						var NAMEOFEACH_TEMP = this.NAM.length;
+						for (var NAMEOFEACH_TEMP_i = 0;NAMEOFEACH_TEMP_i < NAMEOFEACH_TEMP;NAMEOFEACH_TEMP_i++)
+						{
+							if ((typeof this.DAT[NAMEOFEACH_TEMP_i]) === NAMEOFEACH_TYPE)
+							{
+								NAMEOFEACH_RETURNER.push(this.NAM[NAMEOFEACH_TEMP_i]);
+							}
+						}
+						return NAMEOFEACH_RETURNER;
+					},
+					GRANTKEYNAM:function( GRANTKEYNAM_SEED )
+					{					 
+						var GRANTNAM_COUNT = 0;
+						var GRANTKEYNAM_SEED_COUNTED = GRANTKEYNAM_SEED + GRANTNAM_COUNT;
+						while (this.NAM.indexOf(GRANTKEYNAM_SEED_COUNTED) != -1)
+						{
+							GRANTNAM_COUNT++;
+							GRANTKEYNAM_SEED_COUNTED = GRANTKEYNAM_SEED + GRANTNAM_COUNT;
+						}
+						return GRANTKEYNAM_SEED_COUNTED;												
+					}					
+				}; //end HASHARR returner						
+			} //end HASHARR function
+	}, // End Collections
+UTIL:{
+	CLOCK:function()
+		{		
+			return(function(that){
+				return {
+					ACTS:that,
+					TIMER:window.setInterval(function(){that.FOREACH(function(REMOTE){REMOTE.ACT()}, "ACT");}, 500)
+					}
+			})(LUXLOOM.COLL.HASHARR());
+		},
+	COUT:function( S, ELM_NAM )
+		{
+				document.getElementById(ELM_NAM).innerHTML += S;
+		}
+	},	
+INIT:function() 
+	{
+		(function (that){this.ROOT = that;}(this)); /*place a reference of the root object into root */
+		LUXLOOM.HEAP = LUXLOOM.COLL.HASHARR();
+		/* add a boot loader section */
+		LUXLOOM.HEAP.ADD("SYS", LUXLOOM.COLL.HASHARR());
+
+		LUXLOOM.HEAP.GET("SYS").FORM.ADD("INP", LUXLOOM.COLL.HASHARR());
+		
+		LUXLOOM.HEAP.GET("SYS").FORM.GET("INP").FORM.ADD("KBUP", LUXLOOM.COLL.HASHARR());
+		LUXLOOM.HEAP.GET("SYS").FORM.GET("INP").FORM.ADD("KBDOWN", LUXLOOM.COLL.HASHARR());
+		LUXLOOM.HEAP.GET("SYS").FORM.GET("INP").FORM.ADD("KBPRESS", LUXLOOM.COLL.HASHARR());		
+		LUXLOOM.HEAP.GET("SYS").FORM.GET("INP").FORM.ADD("CURCLICK", LUXLOOM.COLL.HASHARR());		
+		
+		ROOT.HEAP.GET("SYS").FORM.ADD("TIME", ROOT.UTIL.CLOCK());
+		
+		// START INP INI
+		window.onkeyup = function(that){
+			return function(EV){
+			that.FOREACH(function(REMOTE){REMOTE.ACT(EV)}, "ACT");
+			};
+		}(ROOT.HEAP.GET("SYS").FORM.GET("INP").FORM.GET("KBUP").FORM);
+				
+		window.onkeydown = function(that){
+			return function(EV){
+			that.FOREACH(function(REMOTE){REMOTE.ACT(EV)}, "ACT");
+			};
+		}(ROOT.HEAP.GET("SYS").FORM.GET("INP").FORM.GET("KBDOWN").FORM);
+		
+		window.onkeypress = function(that){
+			return function(EV){
+			that.FOREACH(function(REMOTE){REMOTE.ACT(EV)}, "ACT");
+			};
+		}(ROOT.HEAP.GET("SYS").FORM.GET("INP").FORM.GET("KBPRESS").FORM);
+				
+		window.onclick = function(that){
+			return function(EV){
+			that.FOREACH(function(REMOTE){REMOTE.ACT(EV)}, "ACT");
+			};
+		}(ROOT.HEAP.GET("SYS").FORM.GET("INP").FORM.GET("CURCLICK").FORM);
+		
+		// END INP INI 
+		
+		//ROOT.HEAP.GET("SYS").FORM.GET("INP").FORM.GET("CURCLICK").FORM.ADD("IO", {ACT:function(J){ROOT.UTIL.COUT("Y:" + J.pageY + " X:" + J.pageX + "<BR/>","COUT");}});
+
+		
+		ROOT.UTIL.COUT( "INIT LOADED", "COUT");
+		
+	}	
+};
+
+</script>
+</head>
+<body onload='LUXLOOM.INIT()'>
+<div id='COUT'></div>
+</body>
+<html>
